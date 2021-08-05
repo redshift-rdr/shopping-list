@@ -1,5 +1,6 @@
 import json, os, datetime
 from typing import List, Dict, Any
+import config
 
 def log(message: str, path: str) -> None:
     """ writes application messages to a log file
@@ -15,10 +16,8 @@ def log(message: str, path: str) -> None:
         path : str, required
             The path to the log file
     """
-    assert os.path.exists(path)
-
     with open(path, 'a') as f:
-        f.write(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] - {message}')
+        f.write(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] - {message}\n')
     
 
 def load_json(path: str) -> Dict[str, Any] or None:
@@ -35,6 +34,7 @@ def load_json(path: str) -> Dict[str, Any] or None:
             If the file specified in 'path' doesn't exist
     """
     if not os.path.exists(path):
+        log(f'[ERROR] functions.load_json {path} doesnt exist')
         return None
 
     loaded_json : Dict[str, Any]
@@ -42,6 +42,7 @@ def load_json(path: str) -> Dict[str, Any] or None:
         with open(path, 'r') as f:
             loaded_json = json.load(f)
     except json.decoder.JSONDecodeError:
+        log(f'[ERROR] functions.load_json {path} is not a json file')
         return None
 
     return loaded_json
