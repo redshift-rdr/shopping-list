@@ -139,6 +139,24 @@ def remove_list(cursor : sqlite3.Cursor, list_id : str) -> None:
     cursor.execute("DELETE FROM 'lists' WHERE id = ?", (list_id, ))
 
 @db_access
+def deactivate_list(cursor : sqlite3.Cursor, list_id : str) -> None:
+    """ specify that a list should not be active, by changing it 'active' field
+
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+
+        list_id : str, required
+            The UUID of the list to be deactivated
+    """
+    assert(list_id)
+
+    cursor.execute("UPDATE 'lists' SET active = 0 WHERE id = ?", (list_id, ))
+
+@db_access
 def add_item(cursor : sqlite3.Cursor, list_id : str, name : str, img_path : str ='', recurring : int = 0) -> None:
     """ adds an item to the database, and links it with a list
     
@@ -197,6 +215,28 @@ def remove_item(cursor : sqlite3.Cursor, list_id : str, item_id : str) -> None:
     assert(all([list_id, item_id]))
 
     cursor.execute("DELETE FROM 'item_allocation' WHERE list_id = ? AND item_id = ?", (list_id, item_id))
+
+@db_access
+def update_recurring_item(cursor : sqlite3.Cursor, item_id : str, update_value : int = 1) -> None:
+    """ sets an item to be recurring, by updating the items 'recurring' field to 1
+
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+
+        item_id : str, required
+            The UUID of the item being updated
+
+        update_value : int, optional
+            The value the 'recurring' column will be set to. 1 means the item
+            is recurring, 0 means it will not be recurring
+    """
+    assert(item_id)
+
+    cursor.execute("UPDATE 'items' SET recurring = ? WHERE id = ?", (update_value, item_id, ))
 
 @db_access
 def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:

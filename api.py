@@ -1,9 +1,8 @@
+import db
 from flask import Blueprint, request
 from functions import validate_json
 
 api = Blueprint('api', __name__, template_folder='templates')
-
-
 
 @api.route('/api/lists/add', methods=['GET'])
 def add_list():
@@ -12,7 +11,9 @@ def add_list():
         This function does not require any input, it simply creates a list and returns
         the list ID.
     """
-    pass
+    db.add_list()
+
+    # TODO: add a way for db functions to signal success or failure to API
 
 @api.route('/api/lists/remove', methods=['POST'])
 def remove_list():
