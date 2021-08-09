@@ -1,7 +1,7 @@
-import sqlite3, os, uuid
+import sqlite3, os, uuid, enum
 from typing import Any, Dict, List
 from typing_extensions import Literal
-import config
+import config, functions
 from datetime import datetime
 
 """
@@ -25,6 +25,11 @@ DB Structure
         ---------------
         list_id | item_id | active | added
 """
+
+class DB_STATUS(enum.Enum):
+    SUCCESS = 1
+    DB_ERROR = 2
+    # TODO: finish this
 
 def connect_to_db(path : str) -> sqlite3.Connection:
     """ creates a connection to a sqlite database
@@ -96,7 +101,13 @@ def _create_list(cursor : sqlite3.Cursor) -> str:
             closed when the function finishes.
     """
     id = uuid.uuid4().hex
-    cursor.execute("INSERT INTO 'lists' VALUES(?, ?, ?)", (id, 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+    try:
+        cursor.execute("INSERT INTO 'lists' VALUES(?, ?, ?)", (id, 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] could not add a new list error: {e}")
+        return None
+
     return id
 
 @db_access
@@ -115,10 +126,14 @@ def add_list(cursor : sqlite3.Cursor, add_recurring_items : bool = True) -> None
     """
     list_id = _create_list()
 
+    if not list_id:
+        return 
+
     if add_recurring_items:
         item_list = get_recurring_items()
         for item in item_list:
-            cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item['id'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+            try:
+                cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item['id'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
 
 @db_access
 def remove_list(cursor : sqlite3.Cursor, list_id : str) -> None:

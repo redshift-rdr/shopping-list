@@ -10,6 +10,18 @@ def add_list():
 
         This function does not require any input, it simply creates a list and returns
         the list ID.
+
+        Parameters
+        ----------
+        none
+
+        Returns
+        -------
+        200 - {"message" : "list added successfully"}
+            List was added
+
+        500 - {"message" : "there was a problem"}
+            The list was not able to be added due to an unforeseen problem
     """
     db.add_list()
 
