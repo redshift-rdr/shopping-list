@@ -1,5 +1,5 @@
 import db
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from functions import validate_json
 
 api = Blueprint('api', __name__, template_folder='templates')
@@ -23,43 +23,12 @@ def add_list():
         500 - {"message" : "there was a problem"}
             The list was not able to be added due to an unforeseen problem
     """
-    db.add_list()
+    status = db.add_list()
 
-    # TODO: add a way for db functions to signal success or failure to API
-
-@api.route('/api/lists/remove', methods=['POST'])
-def remove_list():
-    """ removes a list
-
-        This function takes a list ID, and removes it. 
-
-        Parameters
-        ----------
-        list_id : str, required
-            The UUID of the list being removed
-
-        Returns
-        -------
-        200 - {"message" : "list deleted successfully"}
-            The list was deleted
-
-        400 - {"message" : "required parameter not provided"}
-            The list_id was not provided
-
-        404 - {"message" : "list could not be found"}
-            The list could not be found
-
-        Example
-        -------
-        {
-            "list_id" : "16fd2706-8baf-433b-82eb-8c7fada847da"
-        }
-    """
-    post_json = request.json
-
-    validate_json(post_json, ['list_id'])
-
-    pass
+    if status == db.DB_STATUS.ERROR:
+        return jsonify({"message": "there was a problem"}), 500
+    elif status == db.DB_STATUS.SUCCESS:
+        return jsonify({"message": "list added successfully"})
 
 @api.route('/api/items/add', methods=['POST'])
 def add_item():
@@ -75,7 +44,7 @@ def add_item():
 
         Returns
         -------
-        200 - {"message" : "item added successfully", "item_id" : "77fd2706-8baf-432b-82eb-8c7fada848jh"}
+        200 - {"message" : "item added successfully"}
             The item was added to the list
 
         400 - {"message" : "required parameter not provided"}
@@ -94,7 +63,23 @@ def add_item():
             "name" : "Strawberries"
         }
     """
-    pass
+    post_json = request.json
+    if not validate_json(post_json, ['list_id', 'name']):
+        return jsonify({'message': 'required parameter not provided'}), 400
+
+    # check the list is in the database
+    if not db.list_exists(post_json['list_id']):
+        return jsonify({'message': 'list could not be found'}), 404
+
+    # check the name complies with the rules
+    if len(post_json['name']) > 30 and post_json['name'].isalnum():
+        return jsonify({'message': 'invalid item name'}), 400
+
+    status = add_item(post_json['list_id'], post_json['name'])
+    if status == db.DB_STATUS.ERROR:
+        return jsonify({'message': 'there was an error'}), 500
+    elif status == db.DB_STATUS.SUCCESS:
+        return jsonify({'message': 'item added successfully'})
 
 @api.route('/api/items/remove', methods=['POST'])
 def remove_item():
@@ -122,6 +107,29 @@ def remove_item():
         404 - {"message" : "list or item not found"}
             Either list_id or item_id could not be found in the database
     """ 
-    pass
+    post_json = request.json
+    if not validate_json(post_json, ['list_id', 'item_id']):
+        return jsonify({'message': 'required parameter not provided'}), 400
 
+    # check the list is in the database
+    if not db.list_exists(post_json['list_id']):
+        return jsonify({'message': 'list could not be found'}), 404
 
+    status = remove_item(post_json['list_id'], post_json['item_id'])
+    if status == db.DB_STATUS.ERROR:
+        return jsonify({'message': 'there was an error'}), 500
+    elif status == db.DB_STATUS.SUCCESS:
+        return jsonify({'message': 'item removed successfully'})
+
+@api.route('/api/view', methods=['GET'])
+def get_data():
+    """ gets the data required for the web view
+
+        Parameters
+        ----------
+        none
+
+        Returns
+        -------
+        
+    """

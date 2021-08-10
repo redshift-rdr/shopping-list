@@ -28,8 +28,8 @@ DB Structure
 
 class DB_STATUS(enum.Enum):
     SUCCESS = 1
-    DB_ERROR = 2
-    # TODO: finish this
+    ERROR = 2
+    PARAM_MISSING = 3
 
 def connect_to_db(path : str) -> sqlite3.Connection:
     """ creates a connection to a sqlite database
@@ -105,7 +105,7 @@ def _create_list(cursor : sqlite3.Cursor) -> str:
     try:
         cursor.execute("INSERT INTO 'lists' VALUES(?, ?, ?)", (id, 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     except sqlite3.Error as e:
-        functions.log(f"[ERROR] could not add a new list error: {e}")
+        functions.log(f"[ERROR] _create_list - could not add a new list error: {e}")
         return None
 
     return id
@@ -127,13 +127,18 @@ def add_list(cursor : sqlite3.Cursor, add_recurring_items : bool = True) -> None
     list_id = _create_list()
 
     if not list_id:
-        return 
+        return DB_STATUS.PARAM_MISSING
 
     if add_recurring_items:
         item_list = get_recurring_items()
         for item in item_list:
             try:
                 cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item['id'], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+            except sqlite3.Error as e:
+                functions.log(f"[ERROR] add_list - there was a db error: {e}")
+                return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def remove_list(cursor : sqlite3.Cursor, list_id : str) -> None:
@@ -151,7 +156,13 @@ def remove_list(cursor : sqlite3.Cursor, list_id : str) -> None:
     """
     assert(list_id)
 
-    cursor.execute("DELETE FROM 'lists' WHERE id = ?", (list_id, ))
+    try:
+        cursor.execute("DELETE FROM 'lists' WHERE id = ?", (list_id, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] remove_list - there was a database error: {e}")
+        return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def deactivate_list(cursor : sqlite3.Cursor, list_id : str) -> None:
@@ -169,7 +180,13 @@ def deactivate_list(cursor : sqlite3.Cursor, list_id : str) -> None:
     """
     assert(list_id)
 
-    cursor.execute("UPDATE 'lists' SET active = 0 WHERE id = ?", (list_id, ))
+    try:
+        cursor.execute("UPDATE 'lists' SET active = 0 WHERE id = ?", (list_id, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] deactivate_list - there was a database error: {e}")
+        return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def add_item(cursor : sqlite3.Cursor, list_id : str, name : str, img_path : str ='', recurring : int = 0) -> None:
@@ -202,11 +219,17 @@ def add_item(cursor : sqlite3.Cursor, list_id : str, name : str, img_path : str 
     # create a uuid for the item
     item_uuid = uuid.uuid4().hex
 
-    # sql statement to add item to the items table
-    cursor.execute("INSERT INTO 'items' VALUES(?, ?, ?, ?)", (item_uuid, name, img_path, recurring))
+    try:
+        # sql statement to add item to the items table
+        cursor.execute("INSERT INTO 'items' VALUES(?, ?, ?, ?)", (item_uuid, name, img_path, recurring))
 
-    # sql statement to link the item with a list
-    cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+        # sql statement to link the item with a list
+        cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def remove_item(cursor : sqlite3.Cursor, list_id : str, item_id : str) -> None:
@@ -229,7 +252,13 @@ def remove_item(cursor : sqlite3.Cursor, list_id : str, item_id : str) -> None:
     """
     assert(all([list_id, item_id]))
 
-    cursor.execute("DELETE FROM 'item_allocation' WHERE list_id = ? AND item_id = ?", (list_id, item_id))
+    try:
+        cursor.execute("DELETE FROM 'item_allocation' WHERE list_id = ? AND item_id = ?", (list_id, item_id))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def update_recurring_item(cursor : sqlite3.Cursor, item_id : str, update_value : int = 1) -> None:
@@ -251,7 +280,13 @@ def update_recurring_item(cursor : sqlite3.Cursor, item_id : str, update_value :
     """
     assert(item_id)
 
-    cursor.execute("UPDATE 'items' SET recurring = ? WHERE id = ?", (update_value, item_id, ))
+    try:
+        cursor.execute("UPDATE 'items' SET recurring = ? WHERE id = ?", (update_value, item_id, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
+
+    return DB_STATUS.SUCCESS
 
 @db_access
 def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:
@@ -269,8 +304,12 @@ def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:
     """
     assert(list_id)
 
-    cursor.execute("SELECT item_id, name, img, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ?", (list_id, ))
-    
+    try:
+        cursor.execute("SELECT item_id, name, img, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ?", (list_id, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
+
     # convert rows returned by sqlite to dicts
     return rows_to_dicts(cursor.fetchall())
 
@@ -288,7 +327,11 @@ def get_items(cursor : sqlite3.Cursor, query : str = '') -> List[dict]:
         query : str, optional
             A search string that will filter results that begin with the string
     """
-    cursor.execute("SELECT id, name, img, recurring FROM 'items' WHERE name LIKE ?", (f'{query}%', ))
+    try:
+        cursor.execute("SELECT id, name, img, recurring FROM 'items' WHERE name LIKE ?", (f'{query}%', ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
 
     # convert rows returned by sqlite to dicts
     return rows_to_dicts(cursor.fetchall())
@@ -304,7 +347,11 @@ def get_recurring_items(cursor : sqlite3.Cursor) -> List[dict]:
             the cursor will be passed automatically, and the connection
             closed when the function finishes.
     """
-    cursor.execute("SELECT id, name, img, recurring FROM 'items' WHERE recurring = 1")
+    try:
+        cursor.execute("SELECT id, name, img, recurring FROM 'items' WHERE recurring = 1")
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] there was a database error: {e}")
+        return DB_STATUS.ERROR
 
     # convert rows returned by sqlite to dicts
     return rows_to_dicts(cursor.fetchall())
@@ -314,3 +361,24 @@ def deativate_item(cursor : sqlite3.Cursor, list_id : str, item_id : str) -> Non
     """ 
     """
     pass
+
+@db_access
+def list_exists(cursor : sqlite3.Cursor, list_id : str) -> bool:
+    """ checks whether a list exists in the database
+    
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+
+        list_id : str, required
+            The ID of the list being checked
+    """
+    assert(list_id)
+
+    cursor.execute('SELECT 1 FROM lists WHERE id = ?', (list_id, ))
+    result = cursor.fetchall()
+
+    return rows_to_dicts(result)
