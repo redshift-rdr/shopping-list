@@ -2,7 +2,7 @@ import json, os, datetime
 from typing import List, Dict, Any
 import config
 
-def log(message: str, path: str) -> None:
+def log(message: str, path : str = config.LOG_FILE_PATH) -> None:
     """ writes application messages to a log file
 
         the message will be written to 'logs/application.log'. the current
@@ -16,7 +16,7 @@ def log(message: str, path: str) -> None:
         path : str, required
             The path to the log file
     """
-    with open(path, 'a') as f:
+    with open(path, 'a+') as f:
         f.write(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] - {message}\n')
     
 
