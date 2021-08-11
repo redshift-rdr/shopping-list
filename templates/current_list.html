@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<ul class="nav justify-content-center nav-tabs mb-2">
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">Current List</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Previous Lists</a>
+    </li>
+</ul>
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ current_list['created'] }}</h5>
+        </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><input name="add-item-name"><button class="btn btn-success">Add</button></li>
+                {% for item in current_list['items'] %}
+                    <li class="list-group-item">{{ item['name'] }}</li>
+                {% endfor %}
+            </ul>
+        <div class="card-body">
+            <a href="#" class="card-link" alt="move to previous lists">Shopping ordered</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

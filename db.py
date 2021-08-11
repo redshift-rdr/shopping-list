@@ -382,3 +382,21 @@ def list_exists(cursor : sqlite3.Cursor, list_id : str) -> bool:
     result = cursor.fetchall()
 
     return rows_to_dicts(result)
+
+@db_access
+def get_current_list(cursor : sqlite3.Cursor) -> dict:
+    """ get the current list, and associated items
+    
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+    """
+    cursor.execute('SELECT id, created FROM lists WHERE active = 1 LIMIT 1')
+    current_list = rows_to_dicts(cursor.fetchall())[0]
+
+    items = get_list(current_list['id'])
+
+    return {"id" : current_list['id'], "created": current_list['created'], "items": items}

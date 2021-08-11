@@ -121,15 +121,3 @@ def remove_item():
     elif status == db.DB_STATUS.SUCCESS:
         return jsonify({'message': 'item removed successfully'})
 
-@api.route('/api/view', methods=['GET'])
-def get_data():
-    """ gets the data required for the web view
-
-        Parameters
-        ----------
-        none
-
-        Returns
-        -------
-        
-    """
