@@ -16,7 +16,11 @@
             <h5 class="card-title">{{ current_list['created'] }}</h5>
         </div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item"><input name="add-item-name"><button class="btn btn-success">Add</button></li>
+                <li class="list-group-item">
+                    <input type="hidden" name="list-id" value="{{ current_list['id'] }}">
+                    <input type="text" name="add-item-name">
+                    <button onclick=req_add_item() class="btn btn-success">Add</button>
+                </li>
                 {% for item in current_list['items'] %}
                     <li class="list-group-item">{{ item['name'] }}</li>
                 {% endfor %}
