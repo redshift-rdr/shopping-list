@@ -75,7 +75,7 @@ def add_item():
     if len(post_json['name']) > 30 and post_json['name'].isalnum():
         return jsonify({'message': 'invalid item name'}), 400
 
-    status = add_item(post_json['list_id'], post_json['name'])
+    status = db.add_item(post_json['list_id'], post_json['name'])
     if status == db.DB_STATUS.ERROR:
         return jsonify({'message': 'there was an error'}), 500
     elif status == db.DB_STATUS.SUCCESS:
@@ -115,7 +115,7 @@ def remove_item():
     if not db.list_exists(post_json['list_id']):
         return jsonify({'message': 'list could not be found'}), 404
 
-    status = remove_item(post_json['list_id'], post_json['item_id'])
+    status = db.remove_item(post_json['list_id'], post_json['item_id'])
     if status == db.DB_STATUS.ERROR:
         return jsonify({'message': 'there was an error'}), 500
     elif status == db.DB_STATUS.SUCCESS:

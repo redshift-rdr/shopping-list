@@ -17,8 +17,8 @@
         </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
-                    <input type="hidden" name="list-id" value="{{ current_list['id'] }}">
-                    <input type="text" name="add-item-name">
+                    <input type="hidden" id="list-id" value="{{ current_list['id'] }}">
+                    <input type="text" id="add-item-name">
                     <button onclick=req_add_item() class="btn btn-success">Add</button>
                 </li>
                 {% for item in current_list['items'] %}

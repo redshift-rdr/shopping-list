@@ -305,7 +305,7 @@ def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:
     assert(list_id)
 
     try:
-        cursor.execute("SELECT item_id, name, img, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ?", (list_id, ))
+        cursor.execute("SELECT item_id, name, img, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ? ORDER BY added DESC", (list_id, ))
     except sqlite3.Error as e:
         functions.log(f"[ERROR] there was a database error: {e}")
         return DB_STATUS.ERROR
