@@ -22,7 +22,22 @@
                     <button onclick=req_add_item() class="btn btn-success">Add</button>
                 </li>
                 {% for item in current_list['items'] %}
-                    <li class="list-group-item">{{ item['name'] }}</li>
+                    <li class="list-group-item">
+                        <a style="color: black; text-decoration: none;" data-bs-toggle="collapse" href="#collapse-{{ item['item_id'] }}" role="button" aria-expanded="false" aria-controls="collapse-{{ item['item_id'] }}">
+                            <div class="row">
+                                <div class="col-10">{{ item['name'] }}</div>
+                                <div class="col-2"><i class="bi bi-chevron-compact-down text-muted"></i></div>
+                            </div>
+                        </a>
+                         
+                        <div class="row">
+                            <div class="col collapse mt-2" id="collapse-{{ item['item_id'] }}">
+                                <button class="btn btn-info">Recurring</button>
+                                <button class="btn btn-warning">Remove from list</button>
+                            </div>
+                        </div>
+                    </li>
+                    
                 {% endfor %}
             </ul>
         <div class="card-body">
