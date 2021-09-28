@@ -220,11 +220,12 @@ def add_item(cursor : sqlite3.Cursor, list_id : str, name : str, img_path : str 
     item_uuid = uuid.uuid4().hex
 
     try:
-        # sql statement to add item to the items table
-        cursor.execute("INSERT INTO 'items' VALUES(?, ?, ?, ?)", (item_uuid, name, img_path, recurring))
+        if not item_exists(name):
+            # sql statement to add item to the items table
+            cursor.execute("INSERT INTO 'items' VALUES(?, ?, ?, ?)", (item_uuid, name, img_path, recurring))
 
-        # sql statement to link the item with a list
-        cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+            # sql statement to link the item with a list
+            cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
     except sqlite3.Error as e:
         functions.log(f"[ERROR] there was a database error: {e}")
         return DB_STATUS.ERROR
@@ -312,6 +313,56 @@ def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:
 
     # convert rows returned by sqlite to dicts
     return rows_to_dicts(cursor.fetchall())
+
+@db_access
+def item_exists(cursor : sqlite3.Cursor, item_name : str) -> bool:
+    """ checks if an item is in the database
+
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+
+        item_name : str, required
+            The name of an item being checked
+    """
+    try:
+        cursor.execute("SELECT 1 FROM 'items' WHERE name = ?", (item_name, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] [db.item_exists] {e}")
+        return DB_STATUS.ERROR
+
+    # if the item is not in the database it will return []
+    return rows_to_dicts(cursor.fetchall()) != []
+
+@db_access
+def get_uuid_from_name(cursor : sqlite3.Cursor, item_name : str) -> str:
+    """ gets the uuid of an item from its name
+
+        Parameters
+        ----------
+        cursor : sqlite3.Cursor, required
+            As long as this function is decorated with @db_access then
+            the cursor will be passed automatically, and the connection
+            closed when the function finishes.
+
+        item_name : str, required
+            The name of the item
+    """
+    try:
+        cursor.execute("SELECT id FROM 'items' WHERE name = ?", (item_name, ))
+    except sqlite3.Error as e:
+        functions.log(f"[ERROR] [db.get_uuid_from_name] {e}")
+
+    result = rows_to_dicts(cursor.fetchall())
+    if result:
+        result = result[0]
+        if 'id' in result:
+            return result['id']
+
+    return ''
 
 @db_access
 def get_items(cursor : sqlite3.Cursor, query : str = '') -> List[dict]:

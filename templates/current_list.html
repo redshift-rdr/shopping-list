@@ -23,6 +23,7 @@
                 </li>
                 {% for item in current_list['items'] %}
                     <li class="list-group-item">
+                        <input type="hidden" id="item-id" value="{{ item['item_id'] }}">
                         <a style="color: black; text-decoration: none;" data-bs-toggle="collapse" href="#collapse-{{ item['item_id'] }}" role="button" aria-expanded="false" aria-controls="collapse-{{ item['item_id'] }}">
                             <div class="row">
                                 <div class="col-10">{{ item['name'] }}</div>
@@ -33,7 +34,7 @@
                         <div class="row">
                             <div class="col collapse mt-2" id="collapse-{{ item['item_id'] }}">
                                 <button class="btn btn-info">Recurring</button>
-                                <button class="btn btn-warning">Remove from list</button>
+                                <button onclick=req_remove_item() class="btn btn-warning">Remove from list</button>
                             </div>
                         </div>
                     </li>
