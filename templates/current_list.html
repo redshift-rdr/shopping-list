@@ -18,8 +18,18 @@
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
                     <input type="hidden" id="list-id" value="{{ current_list['id'] }}">
-                    <input type="text" id="add-item-name">
-                    <button onclick=req_add_item() class="btn btn-success">Add</button>
+                    <div class="row">
+                        <div class="col-9">
+                            <input style="height: 100%; width: 100%" type="text" id="add-item-name" onkeyup=req_get_matching_items()>
+                        </div>
+                        <div class="col-3">
+                            <button style="width: 100%" onclick=req_add_item() class="btn btn-success">Add</button>
+                        </div>
+                    </div>
+                    
+                    <div id="myDropdown" class="dropdown-content">
+                        
+                    </div>
                 </li>
                 {% for item in current_list['items'] %}
                     <li class="list-group-item">
@@ -33,8 +43,8 @@
                          
                         <div class="row">
                             <div class="col collapse mt-2" id="collapse-{{ item['item_id'] }}">
-                                <button class="btn btn-info">Recurring</button>
-                                <button onclick=req_remove_item() class="btn btn-warning">Remove from list</button>
+                                <button onclick=req_make_item_recurring(this) class="btn btn-info" data-id="{{ item['item_id'] }}">Recurring</button>
+                                <button onclick=req_remove_item(this) data-id="{{ item['item_id'] }}" class="btn btn-warning">Remove from list</button>
                             </div>
                         </div>
                     </li>

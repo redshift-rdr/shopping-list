@@ -223,9 +223,11 @@ def add_item(cursor : sqlite3.Cursor, list_id : str, name : str, img_path : str 
         if not item_exists(name):
             # sql statement to add item to the items table
             cursor.execute("INSERT INTO 'items' VALUES(?, ?, ?, ?)", (item_uuid, name, img_path, recurring))
+        else:
+            item_uuid = get_uuid_from_name(name)
 
-            # sql statement to link the item with a list
-            cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
+        # sql statement to link the item with a list
+        cursor.execute("INSERT INTO 'item_allocation' VALUES(?, ?, ?, ?)", (list_id, item_uuid, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 1))
     except sqlite3.Error as e:
         functions.log(f"[ERROR] there was a database error: {e}")
         return DB_STATUS.ERROR

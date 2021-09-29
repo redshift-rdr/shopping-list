@@ -121,3 +121,71 @@ def remove_item():
     elif status == db.DB_STATUS.SUCCESS:
         return jsonify({'message': 'item removed successfully'})
 
+@api.route('/api/items/make_recurring', methods=['POST'])
+def make_recurring_item():
+    """ makes an item recurring, meaning it is automatically included in new lists
+
+        Parameters (json)
+        -----------------
+        item_id : str, required
+            The UUID of the item that is to be recurring
+
+        Returns
+        -------
+        200 - {"message" : "item made recurring successfully"}
+            The item was made recurring
+
+        400 - {"message" : "required parameter not provided"}
+            list_id or item_id not provided
+
+        404 - {"message" : "item not found"}
+            item_id could not be found in the database
+
+        500 - {"message" : "there was an error"}
+            There was a database error
+    """ 
+    post_json = request.json
+    if not validate_json(post_json, ['item_id']):
+        return jsonify({'message': 'required parameter not provided'}), 400
+
+    status : db.DB_STATUS = db.update_recurring_item(post_json['item_id'], 1)
+    if status == db.DB_STATUS.ERROR:
+        return jsonify({'message': 'there was an error'}), 500
+    elif status == db.DB_STATUS.SUCCESS:
+        return jsonify({'message': 'item made recurring successfully'})
+
+@api.route('/api/items/get', methods=['POST'])
+def get_matching_items():
+    """ fetches items that start with a provided string
+
+        this provides a list of items that are already in the 
+        database
+
+        Parameters (json)
+        -----------------
+        match_string : str, required
+            The string that will be matched in the database, so if a string of
+            'stra' is provided it will return 'strawberries', 'straight bananas', 'straws'
+
+        Returns
+        -------
+        200 - {['strawberries', 'straws']}
+            A list of items matching the provided string
+
+        400 - {"message" : "required parameter not provided"}
+            list_id or item_id not provided
+
+        400 - {"message" : "invalid parameter"}
+            One of the parameters was invalid
+    """
+    post_json : dict = request.json
+    if not validate_json(post_json, ['match_string']):
+        return jsonify({'message': 'required parameter not provided'}), 400
+
+    if post_json['match_string']:
+        items : list = db.get_items(post_json['match_string'])
+        items = [item['name'] for item in items]
+    else:
+        items = []
+
+    return jsonify(items)
