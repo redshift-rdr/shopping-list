@@ -186,6 +186,8 @@ def deactivate_list(cursor : sqlite3.Cursor, list_id : str) -> None:
         functions.log(f"[ERROR] deactivate_list - there was a database error: {e}")
         return DB_STATUS.ERROR
 
+    # we need to add a new list or there will be no current list
+    add_list()
     return DB_STATUS.SUCCESS
 
 @db_access
@@ -448,7 +450,11 @@ def get_current_list(cursor : sqlite3.Cursor) -> dict:
             closed when the function finishes.
     """
     cursor.execute('SELECT id, created FROM lists WHERE active = 1 LIMIT 1')
-    current_list = rows_to_dicts(cursor.fetchall())[0]
+    current_list = rows_to_dicts(cursor.fetchall())
+    if current_list:
+        current_list = current_list[0]
+    else:
+        return {}
 
     items = get_list(current_list['id'])
 

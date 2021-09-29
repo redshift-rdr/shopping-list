@@ -30,6 +30,35 @@ def add_list():
     elif status == db.DB_STATUS.SUCCESS:
         return jsonify({"message": "list added successfully"})
 
+@api.route('/api/lists/retire', methods=['POST'])
+def retire_list():
+    """ retires (or deactivates) a list, sending it to the 'previous list' section
+
+        Parameters
+        ----------
+        list_id : str, required
+
+        Returns
+        -------
+        200 - 
+            The list was retired successfully
+
+        400 - 
+            The list could not be found
+
+        500 -
+            There was an unexpected error
+    """
+    post_json = request.json
+    if not validate_json(post_json, ['list_id']):
+        return jsonify({'message': 'required parameter not provided'}), 400
+
+    status = db.deactivate_list(post_json['list_id'])
+    if status == db.DB_STATUS.ERROR:
+        return jsonify({'message': 'there was an error'}), 500
+    elif status == db.DB_STATUS.SUCCESS:
+        return jsonify({'message': 'list retired successfully'})
+
 @api.route('/api/items/add', methods=['POST'])
 def add_item():
     """ adds an item to a list

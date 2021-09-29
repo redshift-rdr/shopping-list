@@ -56,6 +56,37 @@ function req_add_item()
     http.send(JSON.stringify({ "list_id" : list_id, "name" : item_name }));
 }
 
+function req_retire_list()
+{
+    // grab the list id
+    var list_id = document.getElementById('list-id').value;
+
+    // construct the http request
+    var url = "api/lists/retire";
+    var http = new XMLHttpRequest();
+    http.onreadystatechange = function()
+    {
+        // if the request finishes and is successful
+        if (http.readyState == 4 && http.status == 200)
+        {
+            // refresh the page to show the newly added item
+            location.reload();
+        }
+        else if (http.readyState == 4 && http.status != 200)
+        {
+            // log the error
+            console.log(http.responseText);
+        }
+    };
+
+    // open the request, and set the data type to JSON
+    http.open("POST", url);
+    http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+    // send off the request
+    http.send(JSON.stringify({ "list_id" : list_id }));
+}
+
 /* sends an http request to remove an item from current list
  * 
  * the list id is taken from 'list-id' input field and the item id
