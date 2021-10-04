@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 from typing_extensions import Literal
 import config, functions
 from datetime import datetime
+from random import choice
 
 """
 DB Structure
@@ -30,6 +31,18 @@ class DB_STATUS(enum.Enum):
     SUCCESS = 1
     ERROR = 2
     PARAM_MISSING = 3
+
+def generate_listname():
+    animals = []
+    adjectives = []
+
+    with open('templates/adjectives.txt', 'r') as f:
+        adjectives = f.read().split('\n')
+
+    with open('templates/animals.txt', 'r') as f:
+        animals = f.read().split('\n')
+
+    return f'{choice(adjectives).strip().lower()} {choice(animals).strip().lower()}'
 
 def connect_to_db(path : str) -> sqlite3.Connection:
     """ creates a connection to a sqlite database
@@ -103,7 +116,7 @@ def _create_list(cursor : sqlite3.Cursor) -> str:
     id = uuid.uuid4().hex
 
     try:
-        cursor.execute("INSERT INTO 'lists' VALUES(?, ?, ?)", (id, 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        cursor.execute("INSERT INTO 'lists' VALUES(?, ?, ?, ?)", (id, 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), generate_listname(),))
     except sqlite3.Error as e:
         functions.log(f"[ERROR] _create_list - could not add a new list error: {e}")
         return None
@@ -187,7 +200,6 @@ def deactivate_list(cursor : sqlite3.Cursor, list_id : str) -> None:
         return DB_STATUS.ERROR
 
     # we need to add a new list or there will be no current list
-    add_list()
     return DB_STATUS.SUCCESS
 
 @db_access
@@ -310,7 +322,7 @@ def get_list(cursor : sqlite3.Cursor, list_id : str) -> List[dict]:
     assert(list_id)
 
     try:
-        cursor.execute("SELECT item_id, name, img, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ? ORDER BY added DESC", (list_id, ))
+        cursor.execute("SELECT item_id, name, img, recurring, added, active FROM 'items' LEFT OUTER JOIN 'item_allocation' ON items.id = item_allocation.item_id WHERE item_allocation.list_id = ? ORDER BY added DESC", (list_id, ))
     except sqlite3.Error as e:
         functions.log(f"[ERROR] there was a database error: {e}")
         return DB_STATUS.ERROR
@@ -449,7 +461,7 @@ def get_current_list(cursor : sqlite3.Cursor) -> dict:
             the cursor will be passed automatically, and the connection
             closed when the function finishes.
     """
-    cursor.execute('SELECT id, created FROM lists WHERE active = 1 LIMIT 1')
+    cursor.execute('SELECT id, name, created FROM lists WHERE active = 1 LIMIT 1')
     current_list = rows_to_dicts(cursor.fetchall())
     if current_list:
         current_list = current_list[0]
@@ -458,4 +470,4 @@ def get_current_list(cursor : sqlite3.Cursor) -> dict:
 
     items = get_list(current_list['id'])
 
-    return {"id" : current_list['id'], "created": current_list['created'], "items": items}
+    return {"id" : current_list['id'], "name" : current_list['name'], "created": current_list['created'], "items": items}

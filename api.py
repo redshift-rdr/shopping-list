@@ -54,6 +54,10 @@ def retire_list():
         return jsonify({'message': 'required parameter not provided'}), 400
 
     status = db.deactivate_list(post_json['list_id'])
+
+    # need to add a new list or there wont be any current list
+    db.add_list()
+    
     if status == db.DB_STATUS.ERROR:
         return jsonify({'message': 'there was an error'}), 500
     elif status == db.DB_STATUS.SUCCESS:
