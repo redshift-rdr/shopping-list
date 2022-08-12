@@ -5,7 +5,7 @@ from app.models import ShoppingList, ShoppingListItem
 @app.route('/')
 @app.route('/index')
 def index():
-    lists = ShoppingList.query.all()
+    lists = db.session.query(ShoppingList).filter_by(archived=False).all()
 
     return render_template('index.html', lists=lists)
 
@@ -96,8 +96,13 @@ def list_complete(list_id):
         return redirect(url_for('index'))
 
     newlist = ShoppingList()
+    recurring_items = db.session.query(ShoppingListItem).filter_by(recurring=True).all()
+    for item in recurring_items:
+        item.slist = newlist
+
     try:
         db.session.add(newlist)
+        db.session.add_all(recurring_items)
         db.session.commit()
     except Exception as e:
         flash(f'there was an error: {e}')
