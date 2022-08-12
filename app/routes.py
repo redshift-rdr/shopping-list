@@ -79,7 +79,7 @@ def item_query(query):
     return jsonify(list({item.name for item in items}))
 
 @app.route('/list/complete/<list_id>', methods=['GET'])
-def list_complete():
+def list_complete(list_id):
     slist = db.session.query(ShoppingList).filter_by(id=list_id).first()
 
     if not slist:
@@ -90,6 +90,14 @@ def list_complete():
 
     try:
         db.session.add(slist)
+        db.session.commit()
+    except Exception as e:
+        flash(f'there was an error: {e}')
+        return redirect(url_for('index'))
+
+    newlist = ShoppingList()
+    try:
+        db.session.add(newlist)
         db.session.commit()
     except Exception as e:
         flash(f'there was an error: {e}')
