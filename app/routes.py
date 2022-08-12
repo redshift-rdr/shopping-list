@@ -19,7 +19,7 @@ def item_add():
         flash('that is not a valid list')
         return redirect(url_for('index'))
 
-    if not item_name.isalnum():
+    if not all(x.isalpha() or x.isspace() for x in item_name):
         flash('that is not a valid name for an item')
         return redirect(url_for('index'))
 
