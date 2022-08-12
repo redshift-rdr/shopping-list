@@ -70,10 +70,10 @@
                         {% endfor %}
                 </ul>
             <div class="card-body">
-                <button style="width: 100%" class="btn btn-primary" onclick=req_retire_list() alt="move to previous lists">
+                <a href="{{ url_for('list_complete', list_id=list.id) }}" style="width: 100%" class="btn btn-primary">
                     <i class="bi bi-cart-check"></i>
                     Shopping ordered
-                </button>
+                </a>
             </div>
             <div class="card-footer">
                 <span class="fw-light fst-italic">List created: {{ list.created.strftime('%-d %B %Y') }}</span>
