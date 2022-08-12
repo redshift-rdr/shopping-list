@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!--<ul class="nav justify-content-center nav-tabs mb-2">
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">Current List</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Previous Lists</a>
+    </li>
+</ul>-->
+
+<div class="container-fluid">
+
+    {% for list in lists %}
+        <div class="card">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <form method="POST" action="/item/add">
+                            <input type="hidden" id="list-id" value="{{ list.id }}" name="list_id">
+                            <div class="row">
+                                <div class="col-8 pe-0 ps-1">
+                                    <input autocomplete="off" class="form-control" style="height: 100%; width: 100%" type="text" id="add-item-name" name="name" onkeyup="req_get_matching_items()">
+                                </div>
+                                <div class="col-4 pe-1 ps-1">
+                                    <input style="width: 100%" class="btn btn-success" type="submit" name="add_item" value="Add">
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div id="myDropdown" class="dropdown-content">
+                            
+                        </div>
+                    </li>
+                        {% for item in list.items %}
+                            <li class="list-group-item">
+                                <input type="hidden" id="item-id" value="{{ item.id }}">
+                                <a style="color: black; text-decoration: none;" data-bs-toggle="collapse" href="#collapse-{{ item.id }}" role="button" aria-expanded="false" aria-controls="collapse-{{ item.id }}">
+                                    <div class="row">
+                                        <div class="col-10">
+                                            {{ item.name }}
+                                            {% if item.recurring %}
+                                                <i class="bi bi-arrow-repeat text-info" title="recurring item"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-2"><i class="bi bi-chevron-compact-down text-muted" title="expand"></i></div>
+                                    </div>
+                                </a>
+                                
+                                <div class="row">
+                                    <div class="col collapse mt-2" id="collapse-{{ item.id }}">
+                                        <div class="row">
+                                            <div class="col-6 pe-1">
+                                                <a href="{{ url_for('item_recurring', item_id=item.id) }}" class="btn btn-info">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                    Recurring
+                                                </a>
+                                            </div>
+                                            <div class="col-6 ps-1">
+                                                <a href="{{ url_for('item_remove', item_id=item.id) }}" class="btn btn-warning">
+                                                    <i class="bi bi-file-minus"></i>
+                                                    Remove
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                        {% endfor %}
+                </ul>
+            <div class="card-body">
+                <button style="width: 100%" class="btn btn-primary" onclick=req_retire_list() alt="move to previous lists">
+                    <i class="bi bi-cart-check"></i>
+                    Shopping ordered
+                </button>
+            </div>
+            <div class="card-footer">
+                <span class="fw-light fst-italic">List created: {{ list.created.strftime('%-d %B %Y') }}</span>
+            </div>
+            
+        </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

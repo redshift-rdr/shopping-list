@@ -176,8 +176,13 @@ function req_get_matching_items()
     // grab the contents of the item name field
     var item_name = document.getElementById('add-item-name').value;
 
+    if (item_name == "")
+    {
+        return;
+    }
+
     // construct the request
-    var url = "api/items/get";
+    var url = "item/query/"+item_name;
     var http = new XMLHttpRequest();
     http.onreadystatechange = function()
     {
@@ -194,11 +199,11 @@ function req_get_matching_items()
     };
 
     // open the request and set content type to JSON
-    http.open("POST", url);
-    http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    http.open("GET", url);
+    //http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 
     // send the request
-    http.send(JSON.stringify({ "match_string" : item_name }));
+    http.send();
 }
 
 function req_make_item_recurring(button)
