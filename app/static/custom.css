@@ -1,0 +1,60 @@
+body {
+    background-color: #022C43;
+}
+
+.dark-bg {
+    background-color: #022C43;
+}
+
+.light-bg {
+    background-color: #053F5E;
+}
+
+.navbar {
+    background-color: #053F5E;
+}
+
+.card-bg-custom {
+    background-color: #053F5E;
+}
+
+.btn-bg-custom {
+    background-color: #FFD700;
+}
+
+.requestor-text {
+    color: #bea100;
+}
+
+.date-today {
+    color: #a0f8b6;
+}
+
+.date-overdue {
+    color: #f8a0a0;
+}
+
+.date-upcoming {
+    color: #eea0f8;
+}
+
+.big-checkbox {
+    /* Double-sized Checkboxes 
+    -ms-transform: scale(1.5); /* IE 
+    -moz-transform: scale(1.5); /* FF 
+    -webkit-transform: scale(1.5); /* Safari and Chrome 
+    -o-transform: scale(1.5); /* Opera 
+    transform: scale(1.5);
+    padding: 10px;
+    margin: 12px;*/
+    width: 35px;
+    height: 35px;
+}
+
+.main-container {
+    position:fixed;
+    top: 0px;
+    bottom: 68px;
+    left: 0;
+    right: 0;
+}

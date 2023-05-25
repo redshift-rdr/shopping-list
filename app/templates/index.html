@@ -1,86 +1,125 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!--<ul class="nav justify-content-center nav-tabs mb-2">
-    <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="#">Current List</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#">Previous Lists</a>
-    </li>
-</ul>-->
-
 <div class="container-fluid">
 
-    {% for list in lists %}
-        <div class="card">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <form method="POST" action="/item/add">
-                            <input type="hidden" id="list-id" value="{{ list.id }}" name="list_id">
-                            <div class="row">
-                                <div class="col-8 pe-0 ps-1">
-                                    <input autocomplete="off" class="form-control" style="height: 100%; width: 100%" type="text" id="add-item-name" name="name" onkeyup="req_get_matching_items()">
-                                </div>
-                                <div class="col-4 pe-1 ps-1">
-                                    <input style="width: 100%" class="btn btn-success" type="submit" name="add_item" value="Add">
-                                </div>
-                            </div>
-                        </form>
-                        
-                        <div id="myDropdown" class="dropdown-content">
-                            
-                        </div>
-                    </li>
-                        {% for item in list.items|reverse %}
-                            <li class="list-group-item">
-                                <input type="hidden" id="item-id" value="{{ item.id }}">
-                                <a style="color: black; text-decoration: none;" data-bs-toggle="collapse" href="#collapse-{{ item.id }}" role="button" aria-expanded="false" aria-controls="collapse-{{ item.id }}">
-                                    <div class="row">
-                                        <div class="col-10">
-                                            {{ item.name }}
-                                            {% if item.recurring %}
-                                                <i class="bi bi-arrow-repeat text-info" title="recurring item"></i>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-2"><i class="bi bi-chevron-compact-down text-muted" title="expand"></i></div>
-                                    </div>
-                                </a>
-                                
-                                <div class="row">
-                                    <div class="col collapse mt-2" id="collapse-{{ item.id }}">
-                                        <div class="row">
-                                            <div class="col-6 pe-1">
-                                                <a href="{{ url_for('item_recurring', item_id=item.id) }}" class="btn btn-info">
-                                                    <i class="bi bi-arrow-repeat"></i>
-                                                    Recurring
-                                                </a>
-                                            </div>
-                                            <div class="col-6 ps-1">
-                                                <a href="{{ url_for('item_remove', item_id=item.id) }}" class="btn btn-warning">
-                                                    <i class="bi bi-file-minus"></i>
-                                                    Remove
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                            
-                        {% endfor %}
-                </ul>
+    {% for item in items %}
+        <div class="card card-bg-custom text-light mb-1">
             <div class="card-body">
-                <a href="{{ url_for('list_complete', list_id=list.id) }}" style="width: 100%" class="btn btn-primary">
-                    <i class="bi bi-cart-check"></i>
-                    Shopping ordered
-                </a>
+                <div class="row">
+                    <div class="col"><h5>{{ item.name }}</h5></div>
+                    <div class="col-2"><a href="{{ url_for('remove_item', id=item.id) }}" style="text-decoration: none">💀</a></div>
+                </div>
+
+                {% if item.quantity %} 
+                    <div class="row">
+                        <div class="col-3"><span class="text-muted">Quantity:</span></div>
+                        <div class="col"><span class="text-muted">{{ item.quantity }}</span></div>
+                    </div>
+                {% endif %}
+                {% if item.brand %} 
+                    <div class="row">
+                        <div class="col-3"><span class="text-muted">Brand:</span></div>
+                        <div class="col"><span class="text-muted">{{ item.brand }}</span></div>
+                    </div>
+                {% endif %}
+                {% if item.link %} 
+                    <div class="row">
+                        <div class="col-3"><span class="text-muted">Link:</span></div>
+                        <div class="col text-truncate"><span class="text-muted"><a class="link-light" href="{{ item.link }}" target=”_blank”>{{ item.link }}</a></span></div>
+                    </div>
+                {% endif %}
+                {% if item.note %} 
+                    <div class="row">
+                        <div class="col-3"><span class="text-muted">Note:</span></div>
+                        <div class="col"><span class="text-muted">{{ item.note }}</span></div>
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-end">
+                {% if item.requestor %} <div class="requestor-text"> {{ item.requestor }} </div> {% endif %}
             </div>
-            <div class="card-footer">
-                <span class="fw-light fst-italic">List created: {{ list.created.strftime('%-d %B %Y') }}</span>
             </div>
-            
         </div>
     {% endfor %}
+
+    {% if not items %}
+    <div class="card card-bg-custom text-light mb-1">
+        <div class="card-body text-muted">
+            No items in the list right now. Click '🍕 add' to get started
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- add item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content dark-bg text-light">
+                <div class="modal-header dark-bg">
+                    <h1 class="modal-title fs-5" id="addItemModelLabel">Add item</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body mt-0 light-bg">
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="name_input" placeholder="name">
+                        <label for="name_input" class="text-muted">name</label>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="brand_input" placeholder="brand (optional)">
+                        <label for="brand_input" class="text-muted">brand (optional)</label>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="qty_input" placeholder="quantity (optional)">
+                        <label for="qty_input" class="text-muted">quantity (optional)</label>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="link_input" placeholder="link (optional)">
+                        <label for="link_input" class="text-muted">link (optional)</label>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="note_input" placeholder="notes (optional)">
+                        <label for="note_input" class="text-muted">notes (optional)</label>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input type="text" class="form-control" id="requestor_input" placeholder="requested by (optional)">
+                        <label for="requestor_input" class="text-muted">requested by (optional)</label>
+                    </div>
+
+                </div>
+                <div class="modal-footer dark-bg">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn light-bg text-light ps-4 pe-4" onclick="req_add_item()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- clear confirm modal -->
+    <div class="modal fade" id="clearModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content dark-bg text-light">
+                <div class="modal-header dark-bg">
+                    <h1 class="modal-title fs-5" id="clearModelLabel">Clear Shopping List</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body mt-0 light-bg">
+                    Are you sure you want to clear the shopping list?
+                </div>
+                <div class="modal-footer dark-bg">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger text-light ps-4 pe-4" onclick="clear_list()">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
 
 </div>
 

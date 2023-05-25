@@ -1,17 +1,22 @@
+import uuid, json, secrets
 from app import db
-from datetime import datetime
+from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import date, datetime
 
-class ShoppingListItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), index=True)
-    recurring = db.Column(db.Boolean, default=False)
-    
-    slist_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'))
-    slist = db.relationship('ShoppingList', back_populates='items')
+def generate_uuid():
+    return str(uuid.uuid4())
 
-class ShoppingList(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.Date, default=datetime.utcnow)
-    archived = db.Column(db.Boolean, default=False)
+class Item(db.Model):
+    """
+        Model that holds the information about an actual item that is added to the shopping list
+    """
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    name = db.Column(db.String(64), index=True)
+    brand = db.Column(db.String(64))
+    quantity = db.Column(db.String(24))
+    link = db.Column(db.Text)
+    requestor = db.Column(db.String(64))
+    note = db.Column(db.Text)
 
-    items = db.relationship('ShoppingListItem', back_populates='slist')
+    def __repr__(self):
+        return f'Item <{self.name}>'
